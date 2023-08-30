@@ -1,4 +1,3 @@
-// src/aws-config.js
 export default {
     region: 'ap-northeast-1',
     accessKeyId: 'AKIAYFREWV74TF3GHQ6N',
