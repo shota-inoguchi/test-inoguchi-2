@@ -11,7 +11,7 @@ function App() {
 
     const addItem = async () => {
         const params = {
-            TableName: 'Todo-2xbfadnmcjhxdkltt6k6tkzytq-dev',
+            TableName: 'Todo-fgiooqw24belfk2fjlrfrsli3q-dev',
             Item: {
                 id: itemId,  // ここで指定されたIDを使用
                 name: itemName
@@ -28,7 +28,7 @@ function App() {
 
     const deleteItem = async () => {
         const params = {
-            TableName: 'Todo-2xbfadnmcjhxdkltt6k6tkzytq-dev',
+            TableName: 'Todo-fgiooqw24belfk2fjlrfrsli3q-dev',
             Key: {
                 id: itemId  // ここで指定されたIDを使用
             }
@@ -44,7 +44,7 @@ function App() {
 
     const getItems = async () => {
       const params = {
-          TableName: 'Todo-2xbfadnmcjhxdkltt6k6tkzytq-dev'
+          TableName: 'Todo-fgiooqw24belfk2fjlrfrsli3q-dev'
       };
   
       try {
