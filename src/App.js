@@ -34,6 +34,7 @@ function App() {
             }
         };
 
+        
         try {
             await dynamoDb.delete(params).promise();
             alert('Item deleted successfully');
