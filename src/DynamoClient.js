@@ -1,6 +1,6 @@
 // src/DynamoClient.js
 import AWS from 'aws-sdk';
-import awsConfig from './aws-config';
+import awsConfig from './aws--config';
 
 AWS.config.update(awsConfig);
 
