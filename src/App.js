@@ -1,111 +1,76 @@
-import React, { useState } from 'react';
-import './App.css'; // 必要であればCSSのインポート
-import { DynamoDB } from 'aws-sdk'; // AWS SDKのインポート
-import dynamoDb from './DynamoClient';
+import React, { useState, useEffect } from 'react';
+import {Amplify,  API, graphqlOperation } from 'aws-amplify';
+import { listTodos } from './graphql/queries';
+import { createTodo, deleteTodo } from './graphql/mutations';
+import config from './aws-exports';
 
+Amplify.configure(config);
 
 function App() {
-    const [itemName, setItemName] = useState('');
-    const [itemId, setItemId] = useState('');  // IDのためのステート
-    const [items, setItems] = useState([]);
+  const [todos, setTodos] = useState([]);
+  const [formData, setFormData] = useState({ name: '', description: '' });
 
-    const addItem = async () => {
-        const params = {
-            TableName: 'Todo-fgiooqw24belfk2fjlrfrsli3q-dev',
-            Item: {
-                id: itemId,  // ここで指定されたIDを使用
-                name: itemName
-            }
-        };
+  useEffect(() => {
+    fetchTodos();
+  }, []);
 
-        try {
-            await dynamoDb.put(params).promise();
-            alert('Item added successfully');
-        } catch (error) {
-            console.error('Error adding item:', error);
-        }
-    };
+  const fetchTodos = async () => {
+    try {
+      const todoData = await API.graphql(graphqlOperation(listTodos));
+      setTodos(todoData.data.listTodos.items);
+    } catch (err) {
+      console.error('Error fetching todos:', err);
+    }
+  }
 
-    const deleteItem = async () => {
-        const params = {
-            TableName: 'Todo-fgiooqw24belfk2fjlrfrsli3q-dev',
-            Key: {
-                id: itemId  // ここで指定されたIDを使用
-            }
-        };
+  const addTodo = async () => {
+    try {
+      if (!formData.name) return;
+      await API.graphql(graphqlOperation(createTodo, { input: formData }));
+      setTodos([...todos, formData]);
+      setFormData({ name: '', description: '' });
+    } catch (err) {
+      console.error('Error adding todo:', err);
+    }
+  }
 
-        
-        try {
-            await dynamoDb.delete(params).promise();
-            alert('Item deleted successfully');
-        } catch (error) {
-            console.error('Error deleting item:', error);
-        }
-    };
-
-    const getItems = async () => {
-      const params = {
-          TableName: 'Todo-fgiooqw24belfk2fjlrfrsli3q-dev'
-      };
-  
-      try {
-          const data = await dynamoDb.scan(params).promise();
-          return data.Items || [];  // ここで空の配列をデフォルトとして返すように修正
-      } catch (error) {
-          console.error('Error getting items:', error);
-          return [];  // エラーの場合も空の配列を返す
-      }
-  };
-  
-  
-
-    const handleGetItems = async () => {
-      try {
-          const retrievedItems = await getItems();
-          setItems(retrievedItems);
-      } catch (error) {
-          console.error('Error retrieving items:', error);
-      }
-  };
-
+  const removeTodo = async (id) => {
+    try {
+      await API.graphql(graphqlOperation(deleteTodo, { input: { id } }));
+      const newTodos = todos.filter(todo => todo.id !== id);
+      setTodos(newTodos);
+    } catch (err) {
+      console.error('Error deleting todo:', err);
+    }
+  }
 
   return (
     <div className="App">
-        <input
-            value={itemId}
-            onChange={(e) => setItemId(e.target.value)}
-            placeholder="Item ID"
-        />
-        <input
-            value={itemName}
-            onChange={(e) => setItemName(e.target.value)}
-            placeholder="Item name"
-        />
-        <button onClick={addItem}>Add Item</button>
-        <button onClick={deleteItem}>Delete Item by ID</button>
-        <button onClick={handleGetItems}>Get Items</button>
-
-        <table className="centered-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                </tr>
-            </thead>
-            <tbody>
-                {items.map((item, index) => (
-                    <tr key={index}>
-                        <td>{item.id}</td>
-                        <td>{item.name}</td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
+      <h1>My Todos</h1>
+      <input
+        value={formData.name}
+        onChange={e => setFormData({ ...formData, 'name': e.target.value })}
+        placeholder="Todo name"
+      />
+      <input
+        value={formData.description}
+        onChange={e => setFormData({ ...formData, 'description': e.target.value })}
+        placeholder="Todo description"
+      />
+      <button onClick={addTodo}>Add Todo</button>
+      <div style={{ marginBottom: 30 }}>
+        {
+          todos.map(todo => (
+            <div key={todo.id || todo.name}>
+              <h2>{todo.name}</h2>
+              <p>{todo.description}</p>
+              <button onClick={() => removeTodo(todo.id)}>Delete</button>
+            </div>
+          ))
+        }
+      </div>
     </div>
-);
-
+  );
 }
 
 export default App;
-
-
